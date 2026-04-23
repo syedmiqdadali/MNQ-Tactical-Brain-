@@ -1,6 +1,7 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "downloadUrl": "https://github.com/syedmiqdadali/MNQ-Tactical-Brain-/releases/latest/download/MNQ.Tactical.Brain.zip",
   "releaseDate": "2026-04-24",
-  "notes": "v1.0.2 - Fast extraction (fixes stuck installs on v1.0.1)"
+  "notes": "v1.0.3 - One-click 'Update Now' button in the banner"
 }
+
