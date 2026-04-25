@@ -1,6 +1,6 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "downloadUrl": "https://github.com/syedmiqdadali/MNQ-Tactical-Brain-/releases/latest/download/MNQ.Tactical.Brain.zip",
   "releaseDate": "2026-04-25",
-  "notes": "v1.0.7 - Fix Responsibles report: AMO names now resolve correctly for clients whose HR file uses 'Assigned AM's' or alternate phone-column headers (Phalia, Mandi Bahauddin)."
+  "notes": "v1.0.8 - Adds visible version pill (bottom-right) showing current version and update status. License/version check now uses the GitHub manifest as source of truth. Includes the v1.0.7 Responsibles report fix for Phalia and Mandi Bahauddin."
 }
