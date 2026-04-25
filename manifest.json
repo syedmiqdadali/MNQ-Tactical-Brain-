@@ -1,6 +1,6 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "downloadUrl": "https://github.com/syedmiqdadali/MNQ-Tactical-Brain-/releases/latest/download/MNQ.Tactical.Brain.zip",
-  "releaseDate": "2026-04-24",
-  "notes": "v1.0.6 - Slimmer zip (83 MB); strips Playwright bundled Chromium since backend uses system Edge. Fixes Windows MAX_PATH failures on long install paths."
+  "releaseDate": "2026-04-25",
+  "notes": "v1.0.7 - Fix Responsibles report: AMO names now resolve correctly for clients whose HR file uses 'Assigned AM's' or alternate phone-column headers (Phalia, Mandi Bahauddin)."
 }
