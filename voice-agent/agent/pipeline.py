@@ -24,6 +24,7 @@ from pipecat.services.openai import OpenAILLMService
 from pipecat.services.whisper import WhisperSTTService
 from pipecat.transports.services.livekit import LiveKitParams, LiveKitTransport
 from pipecat.vad.silero import SileroVADAnalyzer
+from pipecat.vad.vad_analyzer import VADParams
 
 from .config import Config
 from .services.kokoro_tts import KokoroTTSService
@@ -40,6 +41,16 @@ SYSTEM_PROMPT = (
 
 
 def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
+    # VAD: defaults of (confidence=0.7, min_volume=0.6) are too strict — typical
+    # WebRTC mic gain doesn't reach 0.6 RMS unless the speaker is unusually loud.
+    # Lower thresholds so normal-volume speech triggers transcription.
+    vad_params = VADParams(
+        confidence=0.5,    # Silero confidence threshold (was 0.7)
+        start_secs=0.2,    # how much speech before "started speaking"
+        stop_secs=0.6,     # how much silence before "stopped speaking"
+        min_volume=0.3,    # audio RMS gate (was 0.6 — way too high)
+    )
+
     transport = LiveKitTransport(
         url=cfg.livekit_url,
         token=_mint_agent_token(cfg),
@@ -48,10 +59,10 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
             audio_in_enabled=True,
             audio_out_enabled=True,
             vad_enabled=True,
-            vad_analyzer=SileroVADAnalyzer(),
-            # Pipecat will hold the assistant's turn until VAD confirms the user
-            # has stopped speaking — this is what eliminates barge-in glitches.
-            vad_audio_passthrough=True,
+            vad_analyzer=SileroVADAnalyzer(params=vad_params),
+            # passthrough=False ensures only speech segments reach Whisper —
+            # otherwise silence frames flood the STT and waste GPU.
+            vad_audio_passthrough=False,
         ),
     )
 
