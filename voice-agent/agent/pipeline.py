@@ -75,10 +75,14 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
         model=cfg.whisper_model,
         device=cfg.whisper_device,
         compute_type=cfg.whisper_compute_type,
-        # Streaming partials are emitted as soon as Whisper has a stable hypothesis.
-        # We feed only finals to the LLM to avoid double-responding.
+        # ─── CRITICAL: SegmentedSTTService has its own per-frame min_volume gate
+        # (default 0.6). Browser mic audio is ~0.1-0.3 RMS — at 0.6 every frame
+        # is dropped before buffering, so Whisper never gets called. Lower it
+        # so realistic speech actually reaches the buffer. ──
+        min_volume=0.2,
+        max_silence_secs=0.7,
+        max_buffer_secs=2.0,
         no_speech_prob=0.4,
-        language=cfg.whisper_language if cfg.whisper_language != "auto" else None,
     )
 
     # Ollama exposes /v1/chat/completions. Pipecat's OpenAILLMService is a perfect fit;
