@@ -110,13 +110,14 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
     )
 
     @transport.event_handler("on_first_participant_joined")
-    async def _greet_on_join(_transport, participant):
-        logger.info(f"Participant joined: {participant['identity']}")
+    async def _greet_on_join(_transport, participant_id):
+        # Pipecat 0.0.55's LiveKit transport passes the identity string directly.
+        logger.info(f"Participant joined: {participant_id}")
         await task.queue_frames([OpenAILLMContextFrame(context)])
 
     @transport.event_handler("on_participant_left")
-    async def _on_left(_transport, participant, _reason):
-        logger.info(f"Participant left: {participant['identity']}")
+    async def _on_left(_transport, participant_id, _reason=None):
+        logger.info(f"Participant left: {participant_id}")
 
     return task, PipelineRunner()
 
