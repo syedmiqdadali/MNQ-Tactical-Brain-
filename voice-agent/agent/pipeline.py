@@ -60,9 +60,11 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
             audio_out_enabled=True,
             vad_enabled=True,
             vad_analyzer=SileroVADAnalyzer(params=vad_params),
-            # passthrough=False ensures only speech segments reach Whisper —
-            # otherwise silence frames flood the STT and waste GPU.
-            vad_audio_passthrough=False,
+            # passthrough MUST be True — Pipecat's SegmentedSTTService (which
+            # WhisperSTTService extends) buffers audio frames between VAD's
+            # start/stop events, then transcribes on UserStoppedSpeakingFrame.
+            # With passthrough=False those audio frames never reach Whisper.
+            vad_audio_passthrough=True,
         ),
     )
 
