@@ -20,12 +20,13 @@ from pipecat.processors.aggregators.openai_llm_context import (
     OpenAILLMContext,
     OpenAILLMContextFrame,
 )
-from pipecat.services.openai import OpenAILLMService, OpenAITTSService
+from pipecat.services.openai import OpenAILLMService
 from pipecat.services.whisper import Model as WhisperModel, WhisperSTTService
 from pipecat.transports.services.livekit import LiveKitParams, LiveKitTransport
 from pipecat.vad.silero import SileroVADAnalyzer
 
 from .config import Config
+from .services.kokoro_tts import KokoroTTSService
 
 
 SYSTEM_PROMPT = (
@@ -88,12 +89,11 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
         model=cfg.ollama_model,
     )
 
-    # Kokoro-fastapi serves the OpenAI /v1/audio/speech spec.
-    tts = OpenAITTSService(
-        api_key="kokoro-local",
-        base_url=cfg.kokoro_base_url,
+    # In-process Kokoro (no HTTP layer). Voice ID's first letter must match
+    # lang_code: bm_/bf_ → 'b' (British), am_/af_ → 'a' (American), etc.
+    tts = KokoroTTSService(
         voice=cfg.kokoro_voice,
-        # 24 kHz matches Kokoro's native sample rate; resampling adds latency.
+        lang_code=cfg.kokoro_voice[0] if cfg.kokoro_voice else "b",
         sample_rate=24000,
     )
 

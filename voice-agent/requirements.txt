@@ -1,12 +1,16 @@
 # Pipecat with our integrations: LiveKit transport, Silero VAD, OpenAI-compatible
-# LLM/TTS clients (used to talk to Ollama and Kokoro-FastAPI), and faster-whisper STT.
-# Sub-deps (faster-whisper, loguru, etc.) come transitively from pipecat-ai's
-# pyproject.toml — DON'T re-pin them here, that just causes resolver conflicts.
+# LLM client (talks to Ollama), and faster-whisper STT.
+# Sub-deps come transitively from pipecat-ai's pyproject.toml — DON'T re-pin
+# them here, that just causes resolver conflicts.
 pipecat-ai[livekit,silero,openai,whisper]==0.0.55
+
+# Kokoro TTS used directly via KokoroTTSService — no HTTP wrapper.
+# Auto-downloads the Kokoro-82M model from HuggingFace on first KPipeline init.
+kokoro>=0.9.4
 
 # Convenient .env loader for local dev (Docker Compose also injects them)
 python-dotenv
 
-# Loguru is pulled transitively by pipecat-ai, but listed here as a no-version pin
-# so the agent code's `from loguru import logger` shows up in pip-tools / lockfiles.
+# Loguru is pulled transitively by pipecat-ai, but listed here so the agent
+# code's `from loguru import logger` is explicit.
 loguru

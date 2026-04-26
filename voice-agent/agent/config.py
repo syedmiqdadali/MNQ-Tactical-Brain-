@@ -53,7 +53,10 @@ class Config:
             livekit_agent_identity=os.environ.get("LIVEKIT_AGENT_IDENTITY", "jarvis-agent"),
             ollama_base_url=_required("OLLAMA_BASE_URL"),
             ollama_model=os.environ.get("OLLAMA_MODEL", "llama3.1:8b-instruct-q4_K_M"),
-            kokoro_base_url=_required("KOKORO_BASE_URL"),
+            # KOKORO_BASE_URL is no longer used (we run Kokoro in-process via
+            # the kokoro Python lib). Kept as an optional field for backwards
+            # compatibility with old .env files.
+            kokoro_base_url=os.environ.get("KOKORO_BASE_URL", ""),
             kokoro_voice=os.environ.get("KOKORO_VOICE", "bm_lewis"),
             whisper_model=os.environ.get("WHISPER_MODEL", "medium"),
             whisper_device=os.environ.get("WHISPER_DEVICE", "cuda"),

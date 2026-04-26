@@ -81,18 +81,20 @@ kill $OLLAMA_PID 2>/dev/null || true
 wait $OLLAMA_PID 2>/dev/null || true
 trap - EXIT
 
-# ─── Step 4: Install Kokoro-FastAPI from source ───────────────────────────────
+# ─── Step 4: Upgrade PyTorch to >= 2.4 ────────────────────────────────────────
+# The runpod/pytorch:2.1.1 base image is too old — transformers (and therefore
+# the kokoro library Pipeline init) silently disable themselves when torch < 2.4.
+# Upgrade BEFORE installing the agent deps so resolver picks compatible wheels.
 echo ""
-echo "[4/7] Installing Kokoro-FastAPI..."
-if [ ! -d /workspace/kokoro-fastapi ]; then
-  git clone --depth 1 https://github.com/remsky/Kokoro-FastAPI.git /workspace/kokoro-fastapi --quiet
-fi
-cd /workspace/kokoro-fastapi
-pip install --quiet -e .
+echo "[4/7] Upgrading PyTorch to 2.4+ (~2 GB)..."
+pip install --quiet --upgrade "torch>=2.4" torchaudio torchvision \
+    --index-url https://download.pytorch.org/whl/cu121
 
 # ─── Step 5: Install agent Python deps ────────────────────────────────────────
+# This pulls pipecat-ai + kokoro (which auto-downloads the Kokoro-82M model on
+# first use into $HF_HOME=/workspace/huggingface).
 echo ""
-echo "[5/7] Installing agent Python deps (this is the slow step, ~3 min)..."
+echo "[5/7] Installing agent Python deps (~2-3 min)..."
 cd "$REPO_DIR/voice-agent"
 pip install --quiet -r requirements.txt
 
@@ -117,16 +119,8 @@ stderr_logfile=/workspace/ollama.err
 stderr_logfile_maxbytes=20MB
 environment=OLLAMA_MODELS="/workspace/ollama-models",OLLAMA_HOST="127.0.0.1:11434"
 
-[program:kokoro]
-command=python -m uvicorn api.src.main:app --host 0.0.0.0 --port 8880
-directory=/workspace/kokoro-fastapi
-autostart=true
-autorestart=true
-priority=20
-stdout_logfile=/workspace/kokoro.log
-stdout_logfile_maxbytes=20MB
-stderr_logfile=/workspace/kokoro.err
-stderr_logfile_maxbytes=20MB
+# Kokoro now runs IN-PROCESS inside the agent (KokoroTTSService), so there is
+# no separate kokoro service to supervise.
 
 [program:agent]
 command=python -m agent.main
