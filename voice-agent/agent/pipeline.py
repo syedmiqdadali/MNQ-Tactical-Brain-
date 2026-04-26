@@ -121,10 +121,11 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
     )
 
     @transport.event_handler("on_first_participant_joined")
-    async def _greet_on_join(_transport, participant_id):
-        # Pipecat 0.0.55's LiveKit transport passes the identity string directly.
+    async def _on_join(_transport, participant_id):
+        # Just log — DON'T trigger an LLM call with no user message. That made
+        # the LLM emit ~1 token of whitespace and the empty TTS chunk caused the
+        # LiveKit transport to close. Wait for real user audio instead.
         logger.info(f"Participant joined: {participant_id}")
-        await task.queue_frames([OpenAILLMContextFrame(context)])
 
     @transport.event_handler("on_participant_left")
     async def _on_left(_transport, participant_id, _reason=None):
