@@ -21,7 +21,7 @@ from pipecat.processors.aggregators.openai_llm_context import (
     OpenAILLMContextFrame,
 )
 from pipecat.services.openai import OpenAILLMService
-from pipecat.services.whisper import Model as WhisperModel, WhisperSTTService
+from pipecat.services.whisper import WhisperSTTService
 from pipecat.transports.services.livekit import LiveKitParams, LiveKitTransport
 from pipecat.vad.silero import SileroVADAnalyzer
 
@@ -37,22 +37,6 @@ SYSTEM_PROMPT = (
     "looks transcribed mid-sentence, ask them to finish their thought rather than "
     "guessing."
 )
-
-
-def _whisper_model_enum(name: str) -> WhisperModel:
-    """Map env-string to Pipecat's Whisper model enum."""
-    mapping = {
-        "tiny": WhisperModel.TINY,
-        "base": WhisperModel.BASE,
-        "small": WhisperModel.SMALL,
-        "medium": WhisperModel.MEDIUM,
-        "large-v3": WhisperModel.LARGE,
-    }
-    if name not in mapping:
-        raise ValueError(
-            f"Unknown WHISPER_MODEL '{name}'. Use one of: {sorted(mapping)}"
-        )
-    return mapping[name]
 
 
 def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
@@ -72,7 +56,10 @@ def build_pipeline(cfg: Config) -> tuple[PipelineTask, PipelineRunner]:
     )
 
     stt = WhisperSTTService(
-        model=_whisper_model_enum(cfg.whisper_model),
+        # Pipecat's WhisperSTTService accepts either Model enum or a HuggingFace
+        # repo string; faster-whisper resolves both. Strings like "medium" /
+        # "small" / "large-v3" / "Systran/faster-distil-whisper-medium.en" all work.
+        model=cfg.whisper_model,
         device=cfg.whisper_device,
         compute_type=cfg.whisper_compute_type,
         # Streaming partials are emitted as soon as Whisper has a stable hypothesis.
