@@ -1,0 +1,75 @@
+# Local-dev compose. The production deployment is RunPod (see runpod/README.md).
+# This file exists only for the rare case you want to debug Pipecat plumbing on a
+# local GPU without burning RunPod credits.
+#
+# Talks to LiveKit Cloud, NOT a self-hosted SFU — same as production.
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jarvis-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-gpu:latest
+    container_name: jarvis-kokoro
+    ports:
+      - "8880:8880"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8880/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  agent:
+    build: .                            # Uses the agent-only Dockerfile, NOT runpod/Dockerfile
+    container_name: jarvis-agent
+    env_file: .env                      # Must contain LiveKit Cloud creds
+    environment:
+      # Override the in-pod localhost defaults so the agent reaches the sibling containers
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - KOKORO_BASE_URL=http://kokoro-tts:8880/v1
+    volumes:
+      - whisper-models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      ollama:
+        condition: service_healthy
+      kokoro-tts:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  whisper-models:

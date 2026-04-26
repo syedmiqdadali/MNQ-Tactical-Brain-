@@ -1,0 +1,13 @@
+# Pipecat with the integrations we need: LiveKit transport, Silero VAD,
+# OpenAI-compatible LLM/TTS clients (used to talk to Ollama and Kokoro-fastapi),
+# and faster-whisper for local STT.
+pipecat-ai[livekit,silero,openai,whisper]==0.0.55
+
+# faster-whisper is pulled in by pipecat[whisper] but pin it so CUDA wheels resolve cleanly
+faster-whisper==1.1.0
+
+# Pipecat's loguru-based logging
+loguru==0.7.2
+
+# Convenient .env loader for local dev (Docker Compose also injects them)
+python-dotenv==1.0.1
