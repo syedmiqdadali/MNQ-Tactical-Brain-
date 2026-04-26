@@ -7,7 +7,7 @@ pipecat-ai[livekit,silero,openai,whisper]==0.0.55
 faster-whisper==1.1.0
 
 # Pipecat's loguru-based logging
-loguru==0.7.2
+loguru==0.7.3
 
 # Convenient .env loader for local dev (Docker Compose also injects them)
 python-dotenv==1.0.1
